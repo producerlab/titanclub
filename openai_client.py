@@ -5,7 +5,7 @@ from openai import AsyncOpenAI
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from config import OPENAI_API_KEY
+from config import OPENAI_API_KEY, OPENAI_RUN_TIMEOUT
 from database import Threads
 
 client = AsyncOpenAI(api_key=OPENAI_API_KEY)
@@ -78,8 +78,8 @@ async def ask_assistant(tg_id, assistant_id, user_message, session):
         assistant_id=assistant_id,
     )
 
-    # === 4. Ждём выполнения ===
-    for _ in range(120):
+    # === 4. Ждём выполнения с таймаутом ===
+    for _ in range(OPENAI_RUN_TIMEOUT):
         run = await client.beta.threads.runs.retrieve(
             thread_id=thread_id,
             run_id=run.id,
@@ -89,6 +89,13 @@ async def ask_assistant(tg_id, assistant_id, user_message, session):
         if run.status in ("failed", "cancelled", "expired"):
             raise RuntimeError(f"Run failed: {run.last_error}")
         await asyncio.sleep(1)
+    else:
+        # Таймаут — отменяем run
+        try:
+            await client.beta.threads.runs.cancel(thread_id=thread_id, run_id=run.id)
+        except Exception as e:
+            logging.warning(f"Failed to cancel timed out run: {e}")
+        raise TimeoutError(f"OpenAI не ответил за {OPENAI_RUN_TIMEOUT} секунд")
 
     # === 5. Получаем последний ответ ===
     messages = await client.beta.threads.messages.list(
@@ -161,8 +168,8 @@ async def ask_assistant_file(
         assistant_id=assistant_id
     )
 
-    # 5. Ждём выполнения
-    while True:
+    # 5. Ждём выполнения с таймаутом
+    for _ in range(OPENAI_RUN_TIMEOUT):
         run = await client.beta.threads.runs.retrieve(
             thread_id=thread_id,
             run_id=run.id
@@ -172,6 +179,13 @@ async def ask_assistant_file(
         if run.status in ("failed", "cancelled", "expired"):
             raise RuntimeError(f"Assistant error: {run.last_error}")
         await asyncio.sleep(1)
+    else:
+        # Таймаут — отменяем run
+        try:
+            await client.beta.threads.runs.cancel(thread_id=thread_id, run_id=run.id)
+        except Exception as e:
+            logging.warning(f"Failed to cancel timed out run: {e}")
+        raise TimeoutError(f"OpenAI не ответил за {OPENAI_RUN_TIMEOUT} секунд")
 
     # 6. Читаем ответ
     messages = await client.beta.threads.messages.list(
