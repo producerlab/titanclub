@@ -201,3 +201,50 @@ async def ask_assistant_file(
             reply += part.text.value
 
     return reply, thread_id
+
+
+async def get_thread_history(
+    tg_id: int,
+    assistant_id: str,
+    session: AsyncSession,
+    limit: int = 5
+) -> list[dict]:
+    """Получает историю сообщений из thread"""
+    # Проверяем, есть ли thread для этого пользователя и ассистента
+    result = await session.execute(
+        select(Threads).where(
+            Threads.tg_id == tg_id,
+            Threads.assistant_id == assistant_id
+        )
+    )
+    thread = result.scalar_one_or_none()
+
+    if not thread:
+        return []
+
+    try:
+        # Получаем сообщения из OpenAI
+        messages = await client.beta.threads.messages.list(
+            thread_id=thread.thread_id,
+            limit=limit * 2  # берём больше, чтобы показать пары Q&A
+        )
+
+        history = []
+        for msg in reversed(messages.data):  # от старых к новым
+            text_parts = []
+            for part in msg.content:
+                if part.type == "text":
+                    text_parts.append(part.text.value)
+
+            if text_parts:
+                history.append({
+                    "role": msg.role,
+                    "text": "\n".join(text_parts)
+                })
+
+        # Возвращаем последние N записей
+        return history[-limit * 2:] if len(history) > limit * 2 else history
+
+    except Exception as e:
+        logging.warning(f"Failed to get thread history: {e}")
+        return []
