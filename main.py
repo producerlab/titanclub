@@ -20,7 +20,9 @@ from keyboards import (
     build_assistant_keyboard, build_assistant_selection_keyboard,
     get_assistant_card, ASSISTANTS
 )
-from openai_client import ask_assistant, ask_assistant_file, get_thread_history
+from openai_client_v2 import (
+    ask_assistant_v2, ask_assistant_file_v2, get_conversation_history_v2
+)
 from rate_limit import check_rate_limit, increment_usage, get_usage_count
 
 logging.basicConfig(level=logging.INFO)
@@ -247,7 +249,7 @@ async def show_history(cb: CallbackQuery):
 
     try:
         async with session_maker() as session:
-            history = await get_thread_history(tg_id, assistant_id, session, limit=5)
+            history = await get_conversation_history_v2(tg_id, assistant_id, session, limit=5)
 
         if not history:
             await cb.answer("История пуста. Задайте первый вопрос!", show_alert=True)
@@ -341,7 +343,7 @@ async def handle_file(message: types.Message):
             await increment_usage(tg_id, session)
             new_count = current_count + 1
 
-            reply, _ = await ask_assistant_file(
+            reply, _ = await ask_assistant_file_v2(
                 tg_id=tg_id,
                 assistant_id=assistant_id,
                 filepath=filepath,
@@ -427,7 +429,7 @@ async def handle_message(message: types.Message):
             await increment_usage(tg_id, session)
             new_count = current_count + 1
 
-            reply, _ = await ask_assistant(
+            reply, _ = await ask_assistant_v2(
                 tg_id=tg_id,
                 assistant_id=assistant_id,
                 user_message=message.text,

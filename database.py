@@ -51,3 +51,13 @@ class UserState(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     tg_id: Mapped[int] = mapped_column(Integer, nullable=False, unique=True, index=True)
     assistant_id: Mapped[str] = mapped_column(String, nullable=True)
+
+
+class Conversations(Base):
+    """Хранение состояния диалога для Responses API (замена Threads)"""
+    __tablename__ = 'conversations'
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    tg_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
+    assistant_id: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    last_response_id: Mapped[str] = mapped_column(String, nullable=True)
