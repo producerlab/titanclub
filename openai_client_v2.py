@@ -357,11 +357,11 @@ ___________________________________
 
 # Модели для каждого ассистента
 ASSISTANT_MODELS = {
-    "asst_ZMDIYhez0iMJ3ZhMScCwREil": "gpt-4.1-mini",  # Адвокат
-    "asst_16FOkKPETrIKCZ4VTn5iMr3J": "gpt-4.1-mini",  # SEO Vivaldi
-    "asst_rYvjemjJPNoTLnraZVFzZsGI": "gpt-4.1-mini",  # Тарантино
-    "asst_QfzzLwaL8JHcve4Y80IVKq9E": "gpt-4.1",       # Ящик Пандоры
-    "asst_K0TDVlaEvZHvh5bSxjz1iUCe": "gpt-4.1",       # Куратор WB
+    "asst_ZMDIYhez0iMJ3ZhMScCwREil": "gpt-4o-mini",  # Адвокат (текстовый)
+    "asst_16FOkKPETrIKCZ4VTn5iMr3J": "gpt-4o-mini",  # SEO Vivaldi (текстовый)
+    "asst_rYvjemjJPNoTLnraZVFzZsGI": "gpt-4o-mini",  # Тарантино (текстовый)
+    "asst_QfzzLwaL8JHcve4Y80IVKq9E": "gpt-4.1",      # Ящик Пандоры (RAG)
+    "asst_K0TDVlaEvZHvh5bSxjz1iUCe": "gpt-4.1",      # Куратор WB (RAG)
 }
 
 # Vector Stores для RAG-ассистентов
